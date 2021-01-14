@@ -20,67 +20,6 @@ import time
 import multiprocessing
 
 
-def timer(function):
-    def wrapper():
-        time_start = time.time()
-        function()
-        time_end = time.time()
-        cost_time = time_end - time_start
-        print("花费时间：{}秒".format(cost_time))
-
-    return wrapper
-
-
-def check_domain_is_use(domain_list):
-    pplist = ['110.38.74.58:8080',
-              '94.127.217.66:40115',
-              '114.5.35.98:38554',
-              '135.181.18.96:37291',
-              '128.199.3.127:3127',
-              '124.158.183.190:8080',
-              '180.211.183.138:8080']
-    prox = random.choice(pplist)
-    time_start = time.time()
-    web_site_names = []
-    check_d = 0
-    url = 'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={}'
-    print(f"共 {len(domain_list)} 等带确认～")
-    reqs = (grequests.get(url.format(u), timeout=10,proxies={'http': f'http://{prox}'}) for u in domain_list)
-    maps = grequests.map(reqs, gtimeout=10, exception_handler=exception_handler, size=20)  # for domain in domain_list:
-    for map in maps:
-        if not map is None:
-            continue
-        else:
-            try:
-                domain_status = BeautifulSoup(requests.get(url).text, 'lxml').find("original").text
-            except Exception as e:
-                continue
-            if not domain_status.startswith('210'):
-                continue
-            with open('checked_domains.txt', 'a') as f:
-                f.write(f"{domain}\n")
-    time_end = time.time()
-    cost_time = time_end - time_start
-    print("花费时间：{}秒".format(cost_time))
-    #     if ".cc" in domain or ".com" in domain or ".net" in domain or ".org:" in domain:
-    #         url = f'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={domain}'
-    #         try:
-    #             domain_status = BeautifulSoup(requests.get(url).text, 'lxml').find("original").text
-    #         except Exception as e:
-    #             continue
-    #         if not domain_status.startswith('210'):
-    #             continue
-    #         check_d += 1
-    #         if check_d > 100:
-    #             print(f" 剩余{len(domain_list) - check_d}")
-    #         with open('checked_domains.txt', 'a') as f:
-    #             f.write(f"{domain}\n")
-    #         time.sleep(0.5)
-    #     else:
-    #         continue
-    print('check finish')
-
-
 def exception_handler(request, exception):
     print('{}{}'.format(request, exception))
 
@@ -109,6 +48,9 @@ def exception_handler(request, exception):
 
     with open('error.txt', 'a', encoding='utf-8') as f:
         f.write('{}{}{}'.format(request, exception, '\n'))
+
+
+web_site_names = open('checked_domains.txt', 'r').read().split('\n')
 
 
 def chick_web_site_is_use(st, ed, pplist):
@@ -208,10 +150,6 @@ def chick_web_site_is_use(st, ed, pplist):
                     f.write('{}{}'.format(web_site_name, '\n'))
 
 
-# with open('detail_error.txt', 'a', encoding='utf-8') as f:
-#     f.write(str(e))
-# chick_web_site_is_use(0, 18492)
-
 if __name__ == '__main__':
     # pplist = prox()
     pplist = ['110.38.74.58:8080',
@@ -222,15 +160,7 @@ if __name__ == '__main__':
               '124.158.183.190:8080',
               '180.211.183.138:8080']
     threads = []
-    s = 0
-    e = 10000
-    ds = 0
-    # de = 923
-    n_check_domain = []
-    for domain in not_check_domain:
-        if ".cc" in domain or ".com" in domain or ".net" in domain or ".org:" in domain:
-            n_check_domain.append(domain)
-    check_domain_is_use(n_check_domain[s:e])
+
     # for i in range(1):
     #     domains = n_check_domain[s:e]
     #     print(type(domains))
@@ -245,46 +175,45 @@ if __name__ == '__main__':
     #
     # chick_web_site_is_use(0, 500, pplist)
     #
-    # s = 0
-    # e = 500
-    # ds = 0
-    # de = 923
-    #
-    # for i in range(10):
-    #     threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
-    #     s += 500
-    #     e += 500
-    #     ds += 923
-    #     de += 923
-    #     threads[i].start()
-    # for i in range(10):
-    #     threads[i].join()
-    # print(threads)
-    # t1 = threading.Thread(target=chick_web_site_is_use, args=(40000, 45000, pplist[0:-1]))
-    # t2 = threading.Thread(target=chick_web_site_is_use, args=(45000, 50000, pplist[800:-1]))
-    # t3 = threading.Thread(target=chick_web_site_is_use, args=(50000, 55000, pplist[1600:-1]))
-    # t4 = threading.Thread(target=chick_web_site_is_use, args=(55000, 60000, pplist[::-1]))
-    # t5 = threading.Thread(target=chick_web_site_is_use, args=(60000, 65000, pplist[2200:-1]))
-    # t6 = threading.Thread(target=chick_web_site_is_use, args=(65000, 70000, pplist[2604:-1]))
-    # t7 = threading.Thread(target=chick_web_site_is_use, args=(70000, 75000, pplist[1500:-1]))
-    # t8 = threading.Thread(target=chick_web_site_is_use, args=(75000, 80000, pplist[908:-1]))
-    # t9 = threading.Thread(target=chick_web_site_is_use, args=(80000, -1, pplist[::-1]))
-    # t1.start()
-    # t2.start()
-    # t3.start()
-    # t4.start()
-    # t5.start()
-    # t6.start()
-    # t7.start()
-    # t8.start()
-    # t9.start()
-    # # ~
-    # t1.join()
-    # t2.join()
-    # t3.join()
-    # t4.join()
-    # t5.join()
-    # t6.join()
-    # t7.join()
-    # t8.join()
-    # t9.join()
+    s = 0
+    e = 500
+    ds = 0
+    de = 923
+
+    for i in range(10):
+        threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
+        s += 500
+        e += 500
+        ds += 923
+        de += 923
+        threads[i].start()
+    for i in range(10):
+        threads[i].join()
+  # t1 = threading.Thread(target=chick_web_site_is_use, args=(40000, 45000, pplist[0:-1]))
+# t2 = threading.Thread(target=chick_web_site_is_use, args=(45000, 50000, pplist[800:-1]))
+# t3 = threading.Thread(target=chick_web_site_is_use, args=(50000, 55000, pplist[1600:-1]))
+# t4 = threading.Thread(target=chick_web_site_is_use, args=(55000, 60000, pplist[::-1]))
+# t5 = threading.Thread(target=chick_web_site_is_use, args=(60000, 65000, pplist[2200:-1]))
+# t6 = threading.Thread(target=chick_web_site_is_use, args=(65000, 70000, pplist[2604:-1]))
+# t7 = threading.Thread(target=chick_web_site_is_use, args=(70000, 75000, pplist[1500:-1]))
+# t8 = threading.Thread(target=chick_web_site_is_use, args=(75000, 80000, pplist[908:-1]))
+# t9 = threading.Thread(target=chick_web_site_is_use, args=(80000, -1, pplist[::-1]))
+# t1.start()
+# t2.start()
+# t3.start()
+# t4.start()
+# t5.start()
+# t6.start()
+# t7.start()
+# t8.start()
+# t9.start()
+# # ~
+# t1.join()
+# t2.join()
+# t3.join()
+# t4.join()
+# t5.join()
+# t6.join()
+# t7.join()
+# t8.join()
+# t9.join()

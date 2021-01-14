@@ -26,21 +26,24 @@
 
 import aiohttp
 import asyncio
-from multiprocessing import Process
-import re
+import multiprocessing
 import time
 import random
+from aiohttp_proxy import ProxyConnector, ProxyType
 
 
-async def check_domain_is_use():
-    domain_list = open("not_check_domains.txt", 'r').read().split('\n')
+async def check_domain_is_use(**keywords):
+    domain = open("not_check_domains.txt", 'r').read().split('\n')
+
+    s = keywords['keywords']['s']
+    e = keywords['keywords']['e']
+    domain_list = domain[s:e]
     print(len(domain_list))
-    sess = aiohttp.ClientSession()
     time_start = time.time()
-    web_site_names = []
-    check_d = 0
+
     url = 'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={}'
     for domain in domain_list:
+
         pplist = ['110.38.74.58:8080',
                   '94.127.217.66:40115',
                   '114.5.35.98:38554',
@@ -49,26 +52,46 @@ async def check_domain_is_use():
                   '124.158.183.190:8080',
                   '180.211.183.138:8080']
         px = random.choice(pplist)
+        connector = ProxyConnector.from_url(f'http://{px}')
+        sess = aiohttp.ClientSession(connector=connector)
+
         if ".cc" in domain or ".com" in domain or ".net" in domain or ".org:" in domain:
             try:
-                data = await sess.get(url=url.format(domain))
-                print(data.status)
+                data = await sess.get(url=url.format(domain), timeout=5)
                 data = await data.text()
                 if "<original>210 : Domain name is available</original>" in data:
                     with open('checked_domains.txt', 'a') as f:
                         f.write(f"{domain}\n")
+                    print(f"{multiprocessing.Process.pid} is finish with {domain}")
+                await sess.close()
             except Exception as e:
                 print('too fast')
                 time.sleep(4)
+                await sess.close()
+                pass
             else:
                 continue
-            await asyncio.sleep(2)
-            time.sleep(3)
-
+        else:
+            await  sess.close()
     time_end = time.time()
     cost_time = time_end - time_start
-    print("花费时间：{}秒".format(cost_time))
+    print(f"{multiprocessing.Process.pid}花费时间：{cost_time}秒")
 
 
-loop = asyncio.new_event_loop()
-loop.run_until_complete(check_domain_is_use())
+def sub_loop(**keywords):
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(check_domain_is_use(keywords=keywords))
+
+
+async def main():
+    s = 0
+    e = 1000
+    for i in range(10):
+        p = multiprocessing.Process(target=sub_loop, kwargs={"s": s, "e": e})
+        p.start()
+        s += 1000
+        e += 1000
+
+
+if __name__ == '__main__':
+    asyncio.get_event_loop().run_until_complete(main())
