@@ -10,35 +10,14 @@
 @desc:
 '''
 import grequests
-
 import requests
-from bs4 import BeautifulSoup
-from multiprocessing import Process
-import threadpool
-import multiprocessing
-from selenium import webdriver
-import time
 import pandas as pd
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import requests
-from Domain import Get_Ten_key
 import random
 import threading
-from functools import wraps
 import time
-import queue
-def exception_handler(request, exception):
-    print('{}{}'.format(request, exception))
-
-def prox():
-    req = requests.get(
-        "https://www.proxydocker.com/en/proxylist/api?email=a0981729934%40gmail.com&country=all&city=all&port=all&type=http-https&anonymity=all&state=all&need=all&format=json")
-    data = req.json()['Proxies']
-    datas = []
-    for i in data:
-        datas.append(('{}:{}'.format(i['ip'], i['port'])))
-    return datas
+import multiprocessing
 
 
 def timer(function):
@@ -52,50 +31,77 @@ def timer(function):
     return wrapper
 
 
+def check_domain_is_use(domain_list):
+    pplist = ['110.38.74.58:8080',
+              '94.127.217.66:40115',
+              '114.5.35.98:38554',
+              '135.181.18.96:37291',
+              '128.199.3.127:3127',
+              '124.158.183.190:8080',
+              '180.211.183.138:8080']
+    prox = random.choice(pplist)
+    time_start = time.time()
+    web_site_names = []
+    check_d = 0
+    url = 'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={}'
+    print(f"共 {len(domain_list)} 等带确认～")
+    reqs = (grequests.get(url.format(u), timeout=10,proxies={'http': f'http://{prox}'}) for u in domain_list)
+    maps = grequests.map(reqs, gtimeout=10, exception_handler=exception_handler, size=20)  # for domain in domain_list:
+    for map in maps:
+        if not map is None:
+            continue
+        else:
+            try:
+                domain_status = BeautifulSoup(requests.get(url).text, 'lxml').find("original").text
+            except Exception as e:
+                continue
+            if not domain_status.startswith('210'):
+                continue
+            with open('checked_domains.txt', 'a') as f:
+                f.write(f"{domain}\n")
+    time_end = time.time()
+    cost_time = time_end - time_start
+    print("花费时间：{}秒".format(cost_time))
+    #     if ".cc" in domain or ".com" in domain or ".net" in domain or ".org:" in domain:
+    #         url = f'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={domain}'
+    #         try:
+    #             domain_status = BeautifulSoup(requests.get(url).text, 'lxml').find("original").text
+    #         except Exception as e:
+    #             continue
+    #         if not domain_status.startswith('210'):
+    #             continue
+    #         check_d += 1
+    #         if check_d > 100:
+    #             print(f" 剩余{len(domain_list) - check_d}")
+    #         with open('checked_domains.txt', 'a') as f:
+    #             f.write(f"{domain}\n")
+    #         time.sleep(0.5)
+    #     else:
+    #         continue
+    print('check finish')
+
+
+def exception_handler(request, exception):
+    print('{}{}'.format(request, exception))
+
+
+def prox():
+    req = requests.get(
+        "https://www.proxydocker.com/en/proxylist/api?email=a0981729934%40gmail.com&country=all&city=all&port=all&type=http-https&anonymity=all&state=all&need=all&format=json")
+    data = req.json()['Proxies']
+    datas = []
+    for i in data:
+        datas.append(('{}:{}'.format(i['ip'], i['port'])))
+    return datas
+
+
 # 对Time函数进行装饰器的添加，@timer引用timer装饰器函数
 
 
-def req():
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'}
-    web_site_names = []
-    # k = 1
-    # for i in range(700):~
+not_check_domain = open('not_check_domains.txt', 'r').read().split('\n')
 
-    #
-    url = 'http://www.juming.com/ykj/?api_sou=1&ymhz=com&ymlx=0&qian2=500&jgpx=0&meiye=500&page={}'
-    #     reqs = requests.get(url, headers=headers)
-    #     soup = BeautifulSoup(reqs.text, 'lxml')
-    #     domain = soup.find_all('a', attrs={'class': 'domainsc'})
-    #     for j in domain:
-    #         web_site_names.append(j.text)
-    #
-    #     k += 1
-    reqs = (
-        grequests.get(
-            'http://www.juming.com/ykj/?api_sou=1&ymhz=com&ymlx=0&qian2=500&jgpx=0&meiye=500&page={}'.format(u),
-            headers=headers, timeout=60) for u in range(10))
-    maps = grequests.map(reqs, gtimeout=60, exception_handler=exception_handler, size=2)
-    d = 0
-    print(
-        reqs
-    )
-    print(len(maps))
-    for i in maps:
-        soup = BeautifulSoup(i.text, 'lxml')
-        domain = soup.find_all('a', attrs={'class': 'domainsc'})
-        for j in domain:
-            web_site_names.append(j.text)
-    return web_site_names
-
-
-web_site_names = req()
 headers = {
     'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'}
-
-with open(r'可以使用的代理.txt', 'r') as f:
-    pplist2 = f.read()
-pplist2 = list(set(pplist2.split('\n')))
 
 
 def exception_handler(request, exception):
@@ -207,23 +213,52 @@ def chick_web_site_is_use(st, ed, pplist):
 # chick_web_site_is_use(0, 18492)
 
 if __name__ == '__main__':
-    pplist = prox()
+    # pplist = prox()
+    pplist = ['110.38.74.58:8080',
+              '94.127.217.66:40115',
+              '114.5.35.98:38554',
+              '135.181.18.96:37291',
+              '128.199.3.127:3127',
+              '124.158.183.190:8080',
+              '180.211.183.138:8080']
     threads = []
-
     s = 0
-    e = 500
+    e = 10000
     ds = 0
-    de = 923
-
-    for i in range(10):
-        threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
-        s += 500
-        e += 500
-        ds += 923
-        de += 923
-        threads[i].start()
-    for i in range(10):
-        threads[i].join()
+    # de = 923
+    n_check_domain = []
+    for domain in not_check_domain:
+        if ".cc" in domain or ".com" in domain or ".net" in domain or ".org:" in domain:
+            n_check_domain.append(domain)
+    check_domain_is_use(n_check_domain[s:e])
+    # for i in range(1):
+    #     domains = n_check_domain[s:e]
+    #     print(type(domains))
+    #     threads.append(threading.Thread(target=check_domain_is_use, kwargs={"domain_list": not_check_domain[s:e]}))
+    #     s += 100
+    #     e += 100
+    #
+    #     threads[i].start()
+    # for i in range(1):
+    #     threads[i].join()
+    # checked_domains = open('checked_domains.txt', 'r').read().split('\n')
+    #
+    # chick_web_site_is_use(0, 500, pplist)
+    #
+    # s = 0
+    # e = 500
+    # ds = 0
+    # de = 923
+    #
+    # for i in range(10):
+    #     threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
+    #     s += 500
+    #     e += 500
+    #     ds += 923
+    #     de += 923
+    #     threads[i].start()
+    # for i in range(10):
+    #     threads[i].join()
     # print(threads)
     # t1 = threading.Thread(target=chick_web_site_is_use, args=(40000, 45000, pplist[0:-1]))
     # t2 = threading.Thread(target=chick_web_site_is_use, args=(45000, 50000, pplist[800:-1]))
