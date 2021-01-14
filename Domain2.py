@@ -160,36 +160,25 @@ if __name__ == '__main__':
               '124.158.183.190:8080',
               '180.211.183.138:8080']
     threads = []
-
-    # for i in range(1):
-    #     domains = n_check_domain[s:e]
-    #     print(type(domains))
-    #     threads.append(threading.Thread(target=check_domain_is_use, kwargs={"domain_list": not_check_domain[s:e]}))
-    #     s += 100
-    #     e += 100
-    #
-    #     threads[i].start()
-    # for i in range(1):
-    #     threads[i].join()
-    # checked_domains = open('checked_domains.txt', 'r').read().split('\n')
-    #
-    # chick_web_site_is_use(0, 500, pplist)
     #
     s = 0
     e = 500
     ds = 0
     de = 923
-
-    for i in range(10):
-        threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
-        s += 500
-        e += 500
-        ds += 923
-        de += 923
-        threads[i].start()
-    for i in range(10):
-        threads[i].join()
-  # t1 = threading.Thread(target=chick_web_site_is_use, args=(40000, 45000, pplist[0:-1]))
+    while True:
+        if len(web_site_names) >= 0:
+            for i in range(10):
+                threads.append(threading.Thread(target=chick_web_site_is_use, args=(s, e, pplist[ds:de])))
+                s += 500
+                e += 500
+                ds += 923
+                de += 923
+                threads[i].start()
+                threads[i].join()
+            print(f'total domain {len(web_site_names)}')
+        else:
+            break
+# t1 = threading.Thread(target=chick_web_site_is_use, args=(40000, 45000, pplist[0:-1]))
 # t2 = threading.Thread(target=chick_web_site_is_use, args=(45000, 50000, pplist[800:-1]))
 # t3 = threading.Thread(target=chick_web_site_is_use, args=(50000, 55000, pplist[1600:-1]))
 # t4 = threading.Thread(target=chick_web_site_is_use, args=(55000, 60000, pplist[::-1]))

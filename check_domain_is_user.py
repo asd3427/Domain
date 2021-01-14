@@ -131,10 +131,9 @@ def check_domain(s, e):
     url = 'http://panda.www.net.cn/cgi-bin/check.cgi?area_domain={}'
     req = (grequests.get(url.format(u), timeout=10, proxies={'http': 'http://{}'.format(random.choice(pplist))}) for u
            in domain if
-           ".cc" in u or ".com" in u or ".net" in u or ".org:" in u)
-    print(req)
+           ".cc" in u or ".com" in u or ".net" in u or ".org:" in u and ".cn" not in u)
     maps = grequests.map(req, gtimeout=10, exception_handler=exception_handler, size=15)
-    print(maps)
+    print(f"{multiprocessing.Process.pid} is down  map {maps}")
     for i in maps:
         if i is not None and i.status_code == 200:
             if "<original>210 : Domain name is available</original>" in i.text:
@@ -146,9 +145,12 @@ if __name__ == '__main__':
     s = 0
     e = 1000
     # check_domain(s, e)
-
-    for i in range(10):
-        p = multiprocessing.Process(target=check_domain, args=(s, e))
-        s += 0
-        e += 1000
-        p.start()
+    nums = len(domain_list)
+    while nums >= 0:
+        for i in range(10):
+            p = multiprocessing.Process(target=check_domain, args=(s, e))
+            s += 0
+            e += 1000
+            p.start()
+        nums = nums - 10000
+        print(f'lest domain {nums}')
